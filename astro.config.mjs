@@ -10,8 +10,7 @@ import { remarkReadingTime } from './src/utils/remark-reading-time.mjs'
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://chrisyy2003.github.io', // 替换 USERNAME 为你的 GitHub 用户名
-  base: '/velo', // 替换 REPOSITORY_NAME 为你的仓库名
+  base: '/',
   output: 'static',
   vite: {
     plugins: [tailwindcss()],

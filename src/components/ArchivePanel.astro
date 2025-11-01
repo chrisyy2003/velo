@@ -9,7 +9,6 @@ const { sortedPosts } = Astro.props
 
 // 从 URL 参数获取过滤条件
 const url = new URL(Astro.request.url)
-console.log(url)
 
 const tags = url.searchParams.getAll('tags')
 const categories = url.searchParams.getAll('category')
@@ -75,7 +74,7 @@ function formatTag(tagList: string[]) {
     groups.map((group) => (
       <div key={group.year}>
         <div class="flex flex-row w-full items-center h-[3.75rem]">
-          <div class="w-[15%] md:w-[10%] transition text-2xl font-bold text-right text-gray-300">
+          <div class="w-[15%] md:w-[10%] transition text-2xl font-bold text-right ">
             {group.year}
           </div>
           <div class="w-[15%] md:w-[10%]">

@@ -1,0 +1,199 @@
+---
+import type { CollectionEntry } from 'astro:content'
+import { render } from 'astro:content'
+
+interface Props {
+  class?: string
+  entry: CollectionEntry<'posts'>
+}
+
+const { entry } = Astro.props
+const className = Astro.props.class
+
+const { data } = entry
+const { title, description, published, tags, category, heroImage } = data
+
+// 获取阅读时间等元数据
+const { remarkPluginFrontmatter } = await render(entry)
+
+const hasCover = heroImage !== undefined && heroImage !== null
+const coverWidth = '28%'
+
+// 格式化日期
+const formatDate = (date: Date) => {
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+}
+
+// 格式化阅读时间
+const readingTime = remarkPluginFrontmatter?.minutes || 1
+const wordCount = remarkPluginFrontmatter?.words || 0
+---
+
+<div
+  class:list={[
+    'card-base flex flex-col-reverse md:flex-col w-full rounded-xl overflow-hidden relative bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-all duration-300',
+    className,
+  ]}
+>
+  <div
+    class:list={[
+      'pl-6 md:pl-9 pr-6 md:pr-2 pt-6 md:pt-7 pb-6 relative',
+      {
+        'w-full md:w-[calc(100%_-_52px_-_12px)]': !hasCover,
+        'w-full md:w-[calc(100%_-_var(--coverWidth)_-_12px)]': hasCover,
+      },
+    ]}
+  >
+    <a
+      href={`/posts/${entry.id}`}
+      class="transition group w-full block font-bold mb-3 text-2xl md:text-3xl text-white hover:text-blue-400 active:text-blue-300 before:w-1 before:h-5 before:rounded-md before:bg-blue-500 before:absolute before:top-[35px] before:left-[18px] before:hidden md:before:block"
+    >
+      {title}
+      <svg
+        class="inline w-8 h-8 text-blue-500 md:hidden translate-y-0.5 absolute ml-2"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9 5l7 7-7 7"></path>
+      </svg>
+      <svg
+        class="text-blue-500 w-8 h-8 transition hidden md:inline absolute translate-y-0.5 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 ml-2"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9 5l7 7-7 7"></path>
+      </svg>
+    </a>
+
+    <!-- metadata -->
+    <div class="flex flex-wrap items-center gap-2 mb-4 text-sm text-gray-400">
+      <time>{formatDate(published)}</time>
+      {
+        category && (
+          <>
+            <span>•</span>
+            <span class="px-2 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">
+              {category}
+            </span>
+          </>
+        )
+      }
+      {
+        tags && tags.length > 0 && (
+          <>
+            <span>•</span>
+            <div class="flex flex-wrap gap-1">
+              {tags.slice(0, 3).map((tag) => (
+                <span class="px-2 py-1 bg-gray-500/20  rounded-full text-xs">#{tag}</span>
+              ))}
+              {tags.length > 3 && (
+                <span class="text-gray-500 text-xs">+{tags.length - 3}</span>
+              )}
+            </div>
+          </>
+        )
+      }
+    </div>
+
+    <!-- description -->
+    <div class="mb-4 pr-4 line-clamp-2 md:line-clamp-3 leading-relaxed">
+      {description || remarkPluginFrontmatter?.excerpt || '暂无描述'}
+    </div>
+
+    <!-- word count and read time -->
+    <div class="text-sm text-gray-500 flex gap-4">
+      <div>
+        {wordCount} 字
+      </div>
+      <div>|</div>
+      <div>
+        {readingTime} 分钟阅读
+      </div>
+    </div>
+  </div>
+
+  {
+    hasCover && (
+      <a
+        href={`/posts/${entry.id}`}
+        aria-label={title}
+        class="group max-h-[20vh] md:max-h-none mx-4 mt-4 -mb-2 md:mb-0 md:mx-0 md:mt-0 md:w-[var(--coverWidth)] relative md:absolute md:top-3 md:bottom-3 md:right-3 rounded-xl overflow-hidden active:scale-95 transition-transform"
+      >
+        <div class="absolute pointer-events-none z-10 w-full h-full group-hover:bg-black/30 group-active:bg-black/50 transition" />
+        <div class="absolute pointer-events-none z-20 w-full h-full flex items-center justify-center">
+          <svg
+            class="transition opacity-0 group-hover:opacity-100 scale-50 group-hover:scale-100 text-white w-12 h-12"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </div>
+        <img src={heroImage} alt={`${title} 封面图`} class="w-full h-full object-cover" />
+      </a>
+    )
+  }
+
+  {
+    !hasCover && (
+      <a
+        href={`/posts/${entry.id}`}
+        aria-label={title}
+        class="!hidden md:!flex items-center justify-center w-[3.25rem] absolute right-3 top-3 bottom-3 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 active:bg-blue-500/40 active:scale-95 transition-all"
+      >
+        <svg
+          class="text-blue-400 w-10 h-10"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 5l7 7-7 7"
+          />
+        </svg>
+      </a>
+    )
+  }
+</div>
+
+<!-- Mobile separator -->
+<div class="border-t border-dashed mx-6 border-white/20 last:border-t-0 md:hidden"></div>
+
+<style define:vars={{ coverWidth }}>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>
