@@ -1,0 +1,82 @@
+---
+import { getCollection, type CollectionEntry, render } from 'astro:content'
+import Layout from '../../layouts/Layout.astro'
+import Comments from '../../components/Comments.tsx'
+import TableOfContents from '../../components/TableOfContents.astro'
+import PostInfo from '~/components/PostInfo.astro'
+import Tags from '~/components/Tags.astro'
+import { getSortedPosts, TagsGroup } from '~/utils'
+import type { Collation } from '~/types'
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts')
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: post,
+  }))
+}
+
+type Props = CollectionEntry<'posts'>
+
+const post = Astro.props
+const { headings, Content } = await render(post)
+
+// 获取当前文章的tags
+const sortedPosts = await getSortedPosts()
+
+let tags: Collation<'posts'>[] | undefined
+
+const tagsGroup = await TagsGroup.build()
+if (post.data.tags && post.data.tags.length > 0) {
+  const tagsGroup = await TagsGroup.build(sortedPosts)
+  tags = tagsGroup.matchMany(post.data.tags)
+}
+---
+
+<Layout>
+  <main>
+    <article>
+      <header>
+        <!-- <h1>{post.data.title}</h1>
+        {post.data.published && (
+          <time datetime={post.data.published.toISOString()}>
+            {post.data.published.toLocaleDateString('zh-CN')}
+          </time>
+        )} -->
+      </header>
+      <div class="md:mx-2">
+        <h1 id={post.id} class="mb-4 text-[1.75rem] text-heading1 font-semibold">
+          # {post.data.title}
+        </h1>
+        <div class="my-2 border-l-2 border-accent/80 pl-4 py-2">
+          <PostInfo post={post} class="mb-1" />
+          {
+            tags.length > 0 && (
+              <div class="mt-4">
+                <Tags tags={tags} />
+              </div>
+            )
+          }
+        </div>
+      </div>
+
+      <div class="flex flex-col xl:gap-1 2xl:gap-18 xl:flex-row xl:items-start">
+        {headings.length > 0 && <TableOfContents headings={headings} />}
+        <div class="mb-5 xl:min-w-full 2xl:min-w-full prose">
+          <Content />
+        </div>
+      </div>
+    </article>
+    <Comments client:load />
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    /* font-family: system-ui, sans-serif; */
+    line-height: 1.6;
+  }
+</style>

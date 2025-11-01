@@ -1,0 +1,83 @@
+---
+import type { MarkdownHeading } from 'astro'
+
+interface Props {
+  headings: MarkdownHeading[]
+}
+
+const { headings } = Astro.props
+
+const filteredHeadings = headings.filter(({ depth }) => depth >= 2 && depth <= 3)
+---
+
+<details
+  open
+  class="toc relative md:mx-2 xl:mx-0 text-foreground/90 text-sm bg-foreground/5 xl:bg-transparent px-8 xl:pr-0 py-6 mt-5 xl:mt-0 xl:w-full rounded-xl border-3 xl:border-none border-accent/10 xl:sticky xl:top-10 xl:basis-[274px] 2xl:basis-[320px] xl:order-2 xl:shrink-0 xl:opacity-90"
+>
+  <summary
+    class="list-none marker:hidden marker:content-[''] before:content-['>'] before:text-accent before:font-semibold before:absolute before:left-3 cursor-pointer"
+    >Table of Contents</summary
+  >
+  <nav class="w-full text-sm xl:-ml-1">
+    <ul class="mt-4 flex flex-col max-w-full">
+      {
+        filteredHeadings.map((heading) => (
+          <li class="flex items-stretch border-foreground/20">
+            <div class="flex items-stretch">
+              {Array.from({ length: heading.depth - 1 }, (_v, _k) => (
+                <div class="toc-lines flex flex-col items-stretch">
+                  <span class="top-box w-4 xl:w-3 basis-4 border-b-1 border-foreground/20 xl:border-foreground/15" />
+                  <span class="bottom-box w-4 min-h-1/2 xl:w-3 flex-1 border-t-1 border-foreground/20 xl:border-foreground/15" />
+                </div>
+              ))}
+            </div>
+            <a
+              class="inline-block line-clamp-2 ml-3 xl:ml-2 py-1 ps-1 hover:text-accent"
+              href={`#${heading.slug}`}
+            >
+              {heading.text}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+</details>
+
+<script>
+  const anchors = document.querySelectorAll('h2[id], h3[id]')
+  const links = document.querySelectorAll('details.toc > nav > ul > li')
+  if (anchors.length === links.length && anchors.length > 0) {
+    window.addEventListener('scroll', (_event) => {
+      let scrollTop = window.scrollY
+      let highlighted = false
+      // then iterate backwards, on the first match highlight it and break
+      for (var i = anchors.length - 1; i >= 0; i--) {
+        const anchor = anchors[i] as HTMLElement
+        if (!highlighted && scrollTop > anchor.offsetTop - 75) {
+          links[i].classList.add('active-heading')
+          highlighted = true
+        } else {
+          links[i].classList.remove('active-heading')
+        }
+      }
+    })
+  }
+</script>
+
+<style>
+  details[open] summary:before {
+    transform: rotate(90deg);
+  }
+
+  .toc-lines:first-child span {
+    border-left-width: 2px;
+  }
+  li:last-child .toc-lines:first-child span.bottom-box {
+    border-left-width: 0 !important;
+  }
+  li.active-heading a {
+    color: var(--theme-accent);
+    font-weight: 600;
+  }
+</style>

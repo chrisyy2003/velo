@@ -1,0 +1,160 @@
+---
+import { render } from 'astro:content'
+import { getSortedPosts, TagsGroup } from '~/utils'
+import Layout from '~/layouts/Layout.astro'
+import PostInfo from '~/components/PostInfo.astro'
+import Tags from '~/components/Tags.astro'
+import type { GetStaticPaths, InferGetStaticPropsType } from 'astro'
+import type { CollectionEntry } from 'astro:content'
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const sortedPosts = await getSortedPosts()
+  const tagsGroup = await TagsGroup.build(sortedPosts)
+  const allTags = tagsGroup.collations
+
+  return allTags.flatMap((tag) => {
+    const postsWithTag = tag.entries
+    return paginate(postsWithTag, {
+      pageSize: 10,
+      params: { tag: tag.titleSlug },
+    })
+  })
+}) satisfies GetStaticPaths
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>
+
+const { page } = Astro.props as Props
+const { tag } = Astro.params
+
+// 获取当前标签的信息
+const sortedPosts = await getSortedPosts()
+const tagsGroup = await TagsGroup.build(sortedPosts)
+const currentTag = tagsGroup.collations.find((t) => t.titleSlug === tag)
+
+const meta = {
+  description: `View all posts with the tag - ${currentTag?.title || tag}`,
+  title: `Posts about ${currentTag?.title || tag}`,
+}
+
+const paginationProps = {
+  ...(page.url.prev && {
+    prevUrl: {
+      text: '← Previous Posts',
+      url: page.url.prev,
+    },
+  }),
+  ...(page.url.next && {
+    nextUrl: {
+      text: 'Next Posts →',
+      url: page.url.next,
+    },
+  }),
+}
+---
+
+<Layout>
+  <main class="max-w-4xl mx-auto px-4 py-8">
+    <!-- Breadcrumbs -->
+    <nav class="mb-8" aria-label="Breadcrumbs">
+      <ul class="flex items-center text-gray-400">
+        <li class="flex items-center">
+          <a class="text-blue-400 hover:text-blue-300 transition-colors" href="/tags/"
+            >Tags</a
+          >
+          <span class="mx-2 text-gray-500">›</span>
+        </li>
+        <li aria-current="page" class="text-white">
+          <span aria-hidden="true">#</span>{currentTag?.title || tag}
+        </li>
+      </ul>
+    </nav>
+
+    <header class="mb-8">
+      <h1 class="text-4xl font-bold text-white mb-4 capitalize">
+        Posts about {currentTag?.title || tag}
+      </h1>
+      <p class="text-gray-400">
+        {page.data.length} post{page.data.length !== 1 ? 's' : ''} tagged with #{
+          currentTag?.title || tag
+        }
+      </p>
+    </header>
+
+    <!-- Posts List -->
+    <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl px-8 py-6">
+      <ul class="space-y-6">
+        {
+          page.data.map((post) => {
+            const postTags = post.data.tags ? tagsGroup.matchMany(post.data.tags) : []
+
+            return (
+              <li class="border-b border-white/10 last:border-b-0 pb-6 last:pb-0">
+                <article>
+                  <header class="mb-3">
+                    <h2 class="text-xl font-semibold mb-2">
+                      <a
+                        href={`/posts/${post.id}`}
+                        class="text-white hover:text-blue-400 transition-colors"
+                      >
+                        {post.data.title}
+                      </a>
+                    </h2>
+                    <PostInfo post={post} class="text-sm" />
+                  </header>
+
+                  {post.data.description && (
+                    <p class="text-gray-300 mb-3 leading-relaxed">
+                      {post.data.description}
+                    </p>
+                  )}
+
+                  {postTags.length > 0 && (
+                    <div class="mt-3">
+                      <Tags tags={postTags} />
+                    </div>
+                  )}
+                </article>
+              </li>
+            )
+          })
+        }
+      </ul>
+    </div>
+
+    <!-- Pagination -->
+    {
+      (paginationProps.prevUrl || paginationProps.nextUrl) && (
+        <nav class="mt-8 flex justify-between items-center">
+          {paginationProps.prevUrl ? (
+            <a
+              href={paginationProps.prevUrl.url}
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            >
+              {paginationProps.prevUrl.text}
+            </a>
+          ) : (
+            <div />
+          )}
+
+          {paginationProps.nextUrl ? (
+            <a
+              href={paginationProps.nextUrl.url}
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            >
+              {paginationProps.nextUrl.text}
+            </a>
+          ) : (
+            <div />
+          )}
+        </nav>
+      )
+    }
+  </main>
+</Layout>
+
+<style>
+  main {
+    min-height: 100vh;
+    background: linear-gradient(#9eaab0 0%, #0f172a 100%);
+  }
+</style>
