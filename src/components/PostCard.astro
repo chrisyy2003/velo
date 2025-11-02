@@ -80,15 +80,13 @@ const wordCount = remarkPluginFrontmatter?.words || 0
     </a>
 
     <!-- metadata -->
-    <div class="flex flex-wrap items-center gap-2 mb-4 text-sm text-gray-400">
+    <div class="flex flex-wrap items-center gap-2 mb-4 text-sm">
       <time>{formatDate(published)}</time>
       {
         category && (
           <>
             <span>•</span>
-            <span class="px-2 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">
-              {category}
-            </span>
+            <span class="px-2 py-1 bg-blue-500/20 rounded-full text-xs">{category}</span>
           </>
         )
       }
@@ -100,9 +98,7 @@ const wordCount = remarkPluginFrontmatter?.words || 0
               {tags.slice(0, 3).map((tag) => (
                 <span class="px-2 py-1 bg-gray-500/20  rounded-full text-xs">#{tag}</span>
               ))}
-              {tags.length > 3 && (
-                <span class="text-gray-500 text-xs">+{tags.length - 3}</span>
-              )}
+              {tags.length > 3 && <span class="text-xs">+{tags.length - 3}</span>}
             </div>
           </>
         )
@@ -115,7 +111,7 @@ const wordCount = remarkPluginFrontmatter?.words || 0
     </div>
 
     <!-- word count and read time -->
-    <div class="text-sm text-gray-500 flex gap-4">
+    <div class="text-sm flex gap-4">
       <div>
         {wordCount} 字
       </div>
